@@ -1,29 +1,36 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-    <meta charset="UTF-8">
-    <title>Basic ThreeJS APP</title>
-    <style>
-        body {
-            /* set margin to 0 and overflow to hidden, to use the complete page */
-            margin: 0;
-            overflow: hidden;
-        }
-    </style>
+  <head>
+    <meta charset="UTF-8" />
+    <title>3D Space Navigator</title>
+    <link rel="stylesheet" href="style.css" />
     <script type="importmap">
-        {
-          "imports": {
-            "three": "https://unpkg.com/three/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three/examples/jsm/"
-          }
+      {
+        "imports": {
+          "three": "https://unpkg.com/three/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three/examples/jsm/"
         }
+      }
     </script>
-</head>
+  </head>
 
-<body>
-    <!-- HTML body will hold the output -->
+  <body>
+    <div id="instructions">
+      <h2>Sistema Solar 3D</h2>
+      <p><strong>W</strong> - Acelerar</p>
+      <p><strong>S</strong> - Travar</p>
+      <p><strong>A</strong> - Virar Esquerda</p>
+      <p><strong>D</strong> - Virar Direita</p>
+      <p><strong>ESPAÇO</strong> - Boost</p>
+      <hr />
+      <p style="font-size: 0.9em; color: #ff6600">
+        💥 Colide com os planetas para os remover da órbita!
+      </p>
+    </div>
+
+    <div id="boostBar">
+      <div id="boostBarFill"></div>
+    </div>
     <script type="module" src="main.js"></script>
-</body>
-
+  </body>
 </html>
