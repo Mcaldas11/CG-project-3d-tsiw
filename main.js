@@ -44,15 +44,23 @@ const solar = new THREE.Group();
 solar.position.set(0, 0.01, 0);
 scene.add(solar);
 
-// Sun
-const sun = new THREE.Mesh(
-  new THREE.SphereGeometry(2.0, 32, 32),
-  new THREE.MeshStandardMaterial({
-    emissive: 0xffdd66,
-    emissiveIntensity: 2.0,
-  })
-);
+// Sun - blocky style
+const sun = new THREE.Group();
 sun.position.set(0, 2.0, 0);
+sun.add(new THREE.Mesh(
+  new THREE.BoxGeometry(2.5, 2.5, 2.5),
+  new THREE.MeshStandardMaterial({ emissive: 0xffdd66, emissiveIntensity: 2.0, color: 0xffdd66 })
+));
+for (let i = 0; i < 8; i++) {
+  const angle = (i / 8) * Math.PI * 2;
+  const flare = new THREE.Mesh(
+    new THREE.BoxGeometry(0.4, 0.4, 1.2),
+    new THREE.MeshStandardMaterial({ emissive: 0xff9944, emissiveIntensity: 1.5, color: 0xff9944 })
+  );
+  flare.position.set(Math.cos(angle) * 1.8, 0, Math.sin(angle) * 1.8);
+  flare.rotation.y = angle;
+  sun.add(flare);
+}
 solar.add(sun);
 
 // Sun glow
@@ -62,31 +70,75 @@ scene.add(sunLight);
 
 // Planet specs
 const specs = [
-  { r: 3, size: 0.2, speed: 0.5, color: 0x8b7355, name: "Mercury" },
-  { r: 5, size: 0.25, speed: 0.4, color: 0xffd700, name: "Venus" },
-  { r: 7.5, size: 0.3, speed: 0.3, color: 0x4169e1, name: "Earth" },
-  { r: 10, size: 0.22, speed: 0.25, color: 0xff6347, name: "Mars" },
-  {
-    r: 14,
-    size: 0.5,
-    speed: 0.18,
-    color: 0xdaa520,
-    name: "Jupiter",
-    hasRings: true,
-    ringColor: 0xb8a570,
-  },
-  {
-    r: 17.5,
-    size: 0.4,
-    speed: 0.14,
-    color: 0xf4a460,
-    name: "Saturn",
-    hasRings: true,
-    ringColor: 0xd4a574,
-  },
-  { r: 21, size: 0.28, speed: 0.1, color: 0x4fd0e7, name: "Uranus" },
-  { r: 24.5, size: 0.27, speed: 0.08, color: 0x2f4f7f, name: "Neptune" },
+  { r: 3, size: 0.2, speed: 0.5, color: 0x8b7355 },
+  { r: 5, size: 0.25, speed: 0.4, color: 0xffd700 },
+  { r: 7.5, size: 0.3, speed: 0.3, color: 0x4169e1 },
+  { r: 10, size: 0.22, speed: 0.25, color: 0xff6347 },
+  { r: 14, size: 0.5, speed: 0.18, color: 0xdaa520, hasRings: true, ringColor: 0xb8a570 },
+  { r: 17.5, size: 0.4, speed: 0.14, color: 0xf4a460, hasRings: true, ringColor: 0xd4a574 },
+  { r: 21, size: 0.28, speed: 0.1, color: 0x4fd0e7 },
+  { r: 24.5, size: 0.27, speed: 0.08, color: 0x2f4f7f },
 ];
+
+// Function to create blocky planet
+function createBlockyPlanet(spec) {
+  const planetGroup = new THREE.Group();
+
+  // Main planet core (cube)
+  const coreSize = spec.size * 2;
+  const core = new THREE.Mesh(
+    new THREE.BoxGeometry(coreSize, coreSize, coreSize),
+    new THREE.MeshStandardMaterial({
+      color: spec.color,
+      metalness: 0.1,
+      roughness: 0.8,
+    })
+  );
+  core.castShadow = true;
+  core.receiveShadow = true;
+  planetGroup.add(core);
+
+  // Add random cubic details to planets
+  const nDetails = 3 + Math.floor(Math.random() * 4);
+  for (let i = 0; i < nDetails; i++) {
+    const detail = new THREE.Mesh(
+      new THREE.BoxGeometry(
+        coreSize * (0.2 + Math.random() * 0.3),
+        coreSize * (0.2 + Math.random() * 0.3),
+        coreSize * (0.2 + Math.random() * 0.3)
+      ),
+      new THREE.MeshStandardMaterial({
+        color: new THREE.Color(spec.color).offsetHSL(
+          0,
+          0,
+          -0.1 + Math.random() * 0.2
+        ),
+        metalness: 0.2,
+        roughness: 0.7,
+      })
+    );
+
+    // Random position on planet surface
+    const angle1 = Math.random() * Math.PI * 2;
+    const angle2 = Math.random() * Math.PI * 2;
+    const dist = coreSize * 0.5;
+    detail.position.set(
+      Math.cos(angle1) * Math.cos(angle2) * dist,
+      Math.sin(angle2) * dist,
+      Math.sin(angle1) * Math.cos(angle2) * dist
+    );
+    detail.rotation.set(
+      Math.random() * Math.PI,
+      Math.random() * Math.PI,
+      Math.random() * Math.PI
+    );
+    detail.castShadow = true;
+    detail.receiveShadow = true;
+    planetGroup.add(detail);
+  }
+
+  return planetGroup;
+}
 
 const planets = [];
 
@@ -94,62 +146,39 @@ for (const s of specs) {
   const pivot = new THREE.Group();
   pivot.position.copy(sun.position);
 
-  // Planet mesh
-  const mesh = new THREE.Mesh(
-    new THREE.SphereGeometry(s.size, 20, 20),
-    new THREE.MeshStandardMaterial({
-      color: s.color,
-      metalness: 0.1,
-      roughness: 0.8,
-    })
-  );
+  // Planet mesh - blocky version
+  const mesh = createBlockyPlanet(s);
   mesh.position.set(s.r, 0.5, 0);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
   pivot.add(mesh);
 
-  // Rings (para Saturno e Júpiter)
   if (s.hasRings) {
-    const ringGeometry = new THREE.RingGeometry(s.size * 1.8, s.size * 2.8, 32);
-    const ringMaterial = new THREE.MeshStandardMaterial({
-      color: s.ringColor,
-      metalness: 0.2,
-      roughness: 0.6,
-      side: THREE.DoubleSide,
-    });
-    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-    ring.rotation.x = Math.PI * 0.3 + (Math.random() * 0.2 - 0.1);
-    ring.position.copy(mesh.position);
-    ring.castShadow = true;
-    ring.receiveShadow = true;
-    pivot.add(ring);
+    const ringHolder = new THREE.Group();
+    ringHolder.position.copy(mesh.position);
+    ringHolder.rotation.x = Math.PI * 0.3 + (Math.random() * 0.2 - 0.1);
+    const [segs, inner, outer] = [48, s.size * 3.6, s.size * 5.6];
+    for (let layer = 0; layer < 2; layer++) {
+      for (let i = 0; i < segs; i++) {
+        const angle = (i / segs) * Math.PI * 2;
+        const radius = inner + (outer - inner) * (layer / 2) + Math.random() * (outer - inner) / 2;
+        const size = 0.08 + Math.random() * 0.12;
+        const cube = new THREE.Mesh(new THREE.BoxGeometry(size, size * 0.3, size), new THREE.MeshStandardMaterial({ color: s.ringColor, metalness: 0.2, roughness: 0.6 }));
+        cube.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+        cube.rotation.y = angle;
+        cube.castShadow = cube.receiveShadow = true;
+        ringHolder.add(cube);
+      }
+    }
+    pivot.add(ringHolder);
   }
 
-  // Orbit line
-  const orbitGeometry = new THREE.BufferGeometry();
   const orbitPoints = [];
   for (let i = 0; i <= 64; i++) {
     const angle = (i / 64) * Math.PI * 2;
-    orbitPoints.push(
-      Math.cos(angle) * s.r + sun.position.x,
-      sun.position.y,
-      Math.sin(angle) * s.r + sun.position.z
-    );
+    orbitPoints.push(Math.cos(angle) * s.r, sun.position.y, Math.sin(angle) * s.r);
   }
-  orbitGeometry.setAttribute(
-    "position",
-    new THREE.BufferAttribute(new Float32Array(orbitPoints), 3)
-  );
-  const orbitLine = new THREE.Line(
-    orbitGeometry,
-    new THREE.LineBasicMaterial({
-      color: 0x444455,
-      linewidth: 1,
-      transparent: true,
-      opacity: 0.3,
-    })
-  );
-  solar.add(orbitLine);
+  const orbitGeom = new THREE.BufferGeometry();
+  orbitGeom.setAttribute("position", new THREE.BufferAttribute(new Float32Array(orbitPoints), 3));
+  solar.add(new THREE.Line(orbitGeom, new THREE.LineBasicMaterial({ color: 0x444455, transparent: true, opacity: 0.3 })));
 
   solar.add(pivot);
   planets.push({
@@ -165,101 +194,86 @@ for (const s of specs) {
   });
 }
 
-// ---------------- Ship (with "physics") ----------------
+// ---------------- Ship (with "physics") - Improved Blocky Design ----------------
 const shipRoot = new THREE.Group();
 shipRoot.position.set(-10, 0.6, 0);
 scene.add(shipRoot);
 
-const mat = new THREE.MeshStandardMaterial({
-  color: 0xaaccff,
-  metalness: 0.2,
-  roughness: 0.5,
-});
-const fuselage = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 3.2), mat);
-fuselage.castShadow = true;
+const shipColors = {
+  primary: 0xf25346, // red from example
+  secondary: 0xd8d0d1, // white
+  accent: 0x68c3c0, // blue
+  dark: 0x23190f, // dark brown
+  cockpit: 0x4169e1, // blue glass
+};
+
+const fuselage = new THREE.Group();
 shipRoot.add(fuselage);
 
-const cockpit = new THREE.Mesh(
-  new THREE.SphereGeometry(0.6, 12, 12),
-  new THREE.MeshStandardMaterial({ color: 0x102030 })
-);
-cockpit.position.set(0, 0.35, 0.9);
-cockpit.scale.set(1, 0.7, 1);
-fuselage.add(cockpit);
+const addPart = (geom, mat, pos) => {
+  const mesh = new THREE.Mesh(geom, mat);
+  if (pos) mesh.position.set(...pos);
+  mesh.castShadow = mesh.receiveShadow = true;
+  fuselage.add(mesh);
+};
 
-// wings - attach with pivot so we can tilt during turns
+addPart(new THREE.BoxGeometry(1.0, 0.7, 3.5), new THREE.MeshStandardMaterial({ color: shipColors.primary, metalness: 0.3, roughness: 0.6 }));
+addPart(new THREE.BoxGeometry(0.7, 0.5, 0.8), new THREE.MeshStandardMaterial({ color: shipColors.secondary, metalness: 0.5, roughness: 0.4 }), [0, 0, 2.0]);
+addPart(new THREE.BoxGeometry(0.8, 0.6, 1.0), new THREE.MeshStandardMaterial({ color: shipColors.primary, metalness: 0.3, roughness: 0.6 }), [0, 0.3, 0.8]);
+addPart(new THREE.BoxGeometry(0.6, 0.5, 0.8), new THREE.MeshStandardMaterial({ color: shipColors.cockpit, metalness: 0.8, roughness: 0.1, transparent: true, opacity: 0.6 }), [0, 0.15, 1.5]);
+addPart(new THREE.BoxGeometry(0.3, 0.9, 0.6), new THREE.MeshStandardMaterial({ color: shipColors.primary, metalness: 0.3, roughness: 0.6 }), [0, 0.5, -1.5]);
+
 function makeWing(side) {
   const pivot = new THREE.Group();
-  pivot.position.set(side * 1.0, 0, 0);
-  const wing = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.04, 1.6), mat);
-  wing.position.set(side * 0.9, 0, -0.1);
-  wing.castShadow = true;
-  pivot.add(wing);
+  pivot.position.set(side * 0.5, 0, 0);
+  const addW = (geom, color, met, rough, pos) => {
+    const m = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color, metalness: met, roughness: rough }));
+    m.position.set(...pos);
+    m.castShadow = m.receiveShadow = true;
+    pivot.add(m);
+  };
+  addW(new THREE.BoxGeometry(0.2, 0.1, 2.0), shipColors.primary, 0.3, 0.6, [side * 1.2, 0, -0.2]);
+  addW(new THREE.BoxGeometry(0.15, 0.5, 0.3), shipColors.secondary, 0.4, 0.5, [side * 1.2, 0.2, -0.2]);
+  addW(new THREE.BoxGeometry(0.25, 0.15, 0.4), shipColors.accent, 0.6, 0.3, [side * 1.2, -0.15, 0.3]);
   fuselage.add(pivot);
   return pivot;
 }
-const leftWing = makeWing(-1);
-const rightWing = makeWing(1);
+const [leftWing, rightWing] = [makeWing(-1), makeWing(1)];
 
-// engine
-const engine = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.35, 0.35, 0.6, 12),
-  new THREE.MeshStandardMaterial({ color: 0x222222 })
-);
-engine.rotation.x = Math.PI / 2;
-engine.position.set(0, 0, -1.7);
-engine.castShadow = true;
-fuselage.add(engine);
-
-const engineLight = new THREE.PointLight(0xff6600, 0.0, 6, 2);
-engineLight.position.set(0, 0, -2.0);
-fuselage.add(engineLight);
-
-// ----- physics state -----
-const phys = {
-  velocity: new THREE.Vector3(0, 0, 0),
-  acceleration: 0,
-  yawVel: 0,
-  maxSpeed: 20,
-  thrust: 30,
-  angularSpeed: Math.PI * 2.5, // rad/s for yaw
-  damping: 0.96,
-  angularDamping: 0.8,
-  boostMultiplier: 2.6,
-  boosting: false,
-  boostAmount: 1.0, // 0 a 1 (cheio/vazio)
-  boostRechargeTime: 10.0, // tempo para recarregar completamente
-  boostRechargeRate: 1.0 / 10.0, // quanto recarrega por segundo
-};
-
-// input
-const input = {
-  forward: false,
-  back: false,
-  left: false,
-  right: false,
-  boost: false,
-};
-
-// controls
-window.addEventListener("keydown", (e) => {
-  if (e.code === "KeyW") input.forward = true;
-  if (e.code === "KeyS") input.back = true;
-  if (e.code === "KeyA") input.left = true;
-  if (e.code === "KeyD") input.right = true;
-  if (e.code === "Space") {
-    input.boost = true;
+function createEngine(xOffset) {
+  const eng = new THREE.Group();
+  eng.position.set(xOffset, 0, -1.8);
+  const housing = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.8), new THREE.MeshStandardMaterial({ color: shipColors.dark, metalness: 0.7, roughness: 0.3 }));
+  housing.castShadow = true;
+  eng.add(housing);
+  const nozzle = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.3), new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1 }));
+  nozzle.position.z = -0.45;
+  eng.add(nozzle);
+  const prop = new THREE.Group();
+  for (let i = 0; i < 4; i++) {
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.7, 0.15), new THREE.MeshStandardMaterial({ color: shipColors.dark, metalness: 0.8, roughness: 0.2 }));
+    blade.rotation.z = (i * Math.PI) / 2;
+    blade.castShadow = true;
+    prop.add(blade);
   }
-});
-window.addEventListener("keyup", (e) => {
-  if (e.code === "KeyW") input.forward = false;
-  if (e.code === "KeyS") input.back = false;
-  if (e.code === "KeyA") input.left = false;
-  if (e.code === "KeyD") input.right = false;
-  if (e.code === "Space") {
-    input.boost = false;
-  }
-});
+  prop.position.z = -0.5;
+  eng.add(prop);
+  eng.propeller = prop;
+  const light = new THREE.PointLight(0xff6600, 0.0, 8, 2);
+  light.position.z = -0.7;
+  eng.add(light);
+  eng.light = light;
+  return eng;
+}
+const [leftEngine, rightEngine] = [createEngine(-0.6), createEngine(0.6)];
+fuselage.add(leftEngine, rightEngine);
+
+const phys = { velocity: new THREE.Vector3(0, 0, 0), acceleration: 0, yawVel: 0, maxSpeed: 20, thrust: 30, angularSpeed: Math.PI * 2.5, damping: 0.96, angularDamping: 0.8, boostMultiplier: 2.6, boosting: false, boostAmount: 1.0, boostRechargeRate: 0.1 };
+const input = { forward: false, back: false, left: false, right: false, boost: false };
+
+const keys = { KeyW: 'forward', KeyS: 'back', KeyA: 'left', KeyD: 'right', Space: 'boost' };
+window.addEventListener("keydown", (e) => { if (keys[e.code]) input[keys[e.code]] = true; });
+window.addEventListener("keyup", (e) => { if (keys[e.code]) input[keys[e.code]] = false; });
 
 // ---------------- Camera follow (third person) ----------------
 const camOffset = new THREE.Vector3(0, 4.0, 10);
@@ -320,8 +334,12 @@ function animate() {
     }
   }
 
-  // engine visual
-  engine.rotation.z += 25 * dt;
+  // engine visual - rotate propellers
+  leftEngine.propeller.rotation.z += 25 * dt;
+  rightEngine.propeller.rotation.z += 25 * dt;
+
+  // Sun rotation
+  sun.rotation.y += 0.05 * dt;
 
   // physics input -> acceleration & yaw
   let thrust = 0;
@@ -332,15 +350,18 @@ function animate() {
   if (input.boost && phys.boostAmount > 0) {
     phys.boosting = true;
     thrust *= phys.boostMultiplier;
-    engineLight.intensity = 2.0;
+    leftEngine.light.intensity = 2.0;
+    rightEngine.light.intensity = 2.0;
     phys.boostAmount -= 0.15 * dt; // consome boost
     if (phys.boostAmount <= 0) {
       phys.boostAmount = 0;
-      engineLight.intensity = 0.0;
+      leftEngine.light.intensity = 0.0;
+      rightEngine.light.intensity = 0.0;
     }
   } else {
     phys.boosting = false;
-    engineLight.intensity = 0.0;
+    leftEngine.light.intensity = 0.0;
+    rightEngine.light.intensity = 0.0;
     // Recarregar boost
     if (phys.boostAmount < 1.0) {
       phys.boostAmount += phys.boostRechargeRate * dt;
