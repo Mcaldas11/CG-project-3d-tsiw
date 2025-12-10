@@ -320,15 +320,13 @@ function animate() {
     const collisionDist = 2.0 + p.size;
 
     if (distance < collisionDist && p.inOrbit) {
-      // Colisão! Planeta sai da órbita
+      // Colisão = Planeta sai da órbita
       p.inOrbit = false;
 
-      // Calcular direção do impacto
       const impactDir = new THREE.Vector3()
         .subVectors(planetWorldPos, shipRoot.position)
         .normalize();
 
-      // Aplicar velocidade ao planeta baseado na velocidade da nave
       const shipSpeed = phys.velocity.length();
       p.velocity.copy(impactDir).multiplyScalar(shipSpeed * 0.5 + 3);
     }
