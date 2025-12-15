@@ -2,6 +2,9 @@
 Projeto com utilização da biblioteca three.js
 
 
+usar gsap
+
+
 futuras implementações/ideias na nave:
 
 - movimento das asas conforme o movimento da nave
