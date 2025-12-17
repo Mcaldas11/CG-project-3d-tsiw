@@ -194,20 +194,22 @@ for (const s of specs) {
   });
 }
 
-// ---------------- Ship (with "physics") - Improved Blocky Design ----------------
+// ---------------- Ship - Improved Blocky Design ----------------
 const shipRoot = new THREE.Group();
-shipRoot.position.set(-10, 0.6, 0);
+shipRoot.position.set(0, 0, 0);
+shipRoot.rotation.y = Math.PI; // Rotaciona a nave para ficar de costas para a câmara
 scene.add(shipRoot);
 
 const shipColors = {
-  primary: 0xf25346, // red from example
-  secondary: 0xd8d0d1, // white
-  accent: 0x68c3c0, // blue
-  dark: 0x23190f, // dark brown
-  cockpit: 0x4169e1, // blue glass
+  primary: 0xf25346,
+  secondary: 0xd8d0d1,
+  accent: 0x68c3c0,
+  dark: 0x23190f,
+  cockpit: 0x4169e1,
 };
 
 const fuselage = new THREE.Group();
+fuselage.rotation.y = Math.PI; // Inverte a fuselagem para que as hélices fiquem para trás
 shipRoot.add(fuselage);
 
 const addPart = (geom, mat, pos) => {
@@ -225,16 +227,60 @@ addPart(new THREE.BoxGeometry(0.3, 0.9, 0.6), new THREE.MeshStandardMaterial({ c
 
 function makeWing(side) {
   const pivot = new THREE.Group();
-  pivot.position.set(side * 0.5, 0, 0);
-  const addW = (geom, color, met, rough, pos) => {
-    const m = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color, metalness: met, roughness: rough }));
-    m.position.set(...pos);
-    m.castShadow = m.receiveShadow = true;
-    pivot.add(m);
-  };
-  addW(new THREE.BoxGeometry(0.2, 0.1, 2.0), shipColors.primary, 0.3, 0.6, [side * 1.2, 0, -0.2]);
-  addW(new THREE.BoxGeometry(0.15, 0.5, 0.3), shipColors.secondary, 0.4, 0.5, [side * 1.2, 0.2, -0.2]);
-  addW(new THREE.BoxGeometry(0.25, 0.15, 0.4), shipColors.accent, 0.6, 0.3, [side * 1.2, -0.15, 0.3]);
+  pivot.position.set(side * 0.6, 0, 0);
+  
+  // Criar geometria triangular para a asa
+  const wingGeometry = new THREE.BufferGeometry();
+  const vertices = new Float32Array([
+    // Frente da asa (triângulo)
+    0, 0.2, 0,           // 0: topo (junto ao tronco)
+    side * 0.8, 0, 0,    // 1: ponta (longe do tronco)
+    0, -0.2, 0,          // 2: base
+    
+    // Trás da asa (triângulo)
+    0, 0.2, -2,          // 3
+    side * 0.8, 0, -2,   // 4
+    0, -0.2, -2,         // 5
+    
+    // Lateral superior (retângulo)
+    0, 0.2, 0,           // 6
+    0, 0.2, -2,          // 7
+    side * 0.8, 0, -2,   // 8
+    side * 0.8, 0, 0,    // 9
+    
+    // Lateral inferior (retângulo)
+    0, -0.2, 0,          // 10
+    0, -0.2, -2,         // 11
+    side * 0.8, 0, -2,   // 12
+    side * 0.8, 0, 0,    // 13
+  ]);
+  
+  const indices = new Uint32Array([
+    0, 1, 2,    // Frente
+    3, 5, 4,    // Trás (inverter para face correta)
+    6, 8, 7,    // Lateral superior
+    6, 9, 8,
+    10, 11, 12, // Lateral inferior
+    10, 12, 13,
+  ]);
+  
+  wingGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  wingGeometry.setIndex(new THREE.BufferAttribute(indices, 1));
+  wingGeometry.computeVertexNormals();
+  
+  const wingMaterial = new THREE.MeshStandardMaterial({ 
+    color: shipColors.primary, 
+    metalness: 0.3, 
+    roughness: 0.6,
+    side: THREE.DoubleSide
+  });
+  
+  const wing = new THREE.Mesh(wingGeometry, wingMaterial);
+  wing.castShadow = true;
+  wing.receiveShadow = true;
+  wing.position.set(0, 0, -0.3);
+  pivot.add(wing);
+  
   fuselage.add(pivot);
   return pivot;
 }
