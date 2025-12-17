@@ -275,7 +275,7 @@ const planetBoundingBox = new THREE.Box3();
 const phys = { velocity: new THREE.Vector3(0, 0, 0), acceleration: 0, yawVel: 0, maxSpeed: 20, thrust: 30, angularSpeed: Math.PI * 2.5, damping: 0.96, angularDamping: 0.8, boostMultiplier: 2.6, boosting: false, boostAmount: 1.0, boostRechargeRate: 0.1 };
 const input = { forward: false, back: false, left: false, right: false, boost: false };
 
-const keys = { KeyW: 'forward', KeyS: 'back', KeyA: 'left', KeyD: 'right', Space: 'boost' };
+const keys = { KeyW: 'forward', KeyS: 'back', KeyA: 'left', KeyD: 'right', ShiftLeft: 'boost', ShiftRight: 'boost' };
 window.addEventListener("keydown", (e) => { if (keys[e.code]) input[keys[e.code]] = true; });
 window.addEventListener("keyup", (e) => { if (keys[e.code]) input[keys[e.code]] = false; });
 
