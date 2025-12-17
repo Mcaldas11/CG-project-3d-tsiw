@@ -256,14 +256,33 @@ const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   const dt = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
+  
+  // ==================== ANIMAÇÕES EM LOOP ====================
+  
+  //  Vibração do motor (idle) - tremor subtil constante
+  const idleVibration = Math.sin(elapsed * 35) * 0.003;
+  const idleVibrationZ = Math.cos(elapsed * 28) * 0.002;
+  leverGroup.position.y = 0.5 + idleVibration;
+  
+  //  Rotação lenta do pomo (efeito decorativo)
+  knob.rotation.y += 0.008;
+  
+  //  Leve oscilação da alavanca quando parada (motor idle)
+  if (!animating) {
+    leverGroup.rotation.x += Math.sin(elapsed * 25) * 0.0003;
+    leverGroup.rotation.z += Math.cos(elapsed * 20) * 0.0002;
+  }
+  
+  // ==================== FIM ANIMAÇÕES EM LOOP ====================
   
   // Move lever
   const dx = targetPos.x - leverGroup.position.x;
   const dz = targetPos.z - leverGroup.position.z;
   leverGroup.position.x += dx * 12 * dt;
   leverGroup.position.z += dz * 12 * dt;
-  leverGroup.rotation.x = -leverGroup.position.z * 0.15;
-  leverGroup.rotation.z = leverGroup.position.x * 0.15;
+  leverGroup.rotation.x = -leverGroup.position.z * 0.15 + Math.sin(elapsed * 25) * 0.002;
+  leverGroup.rotation.z = leverGroup.position.x * 0.15 + Math.cos(elapsed * 20) * 0.002;
   
   // Waypoint check
   if (animating && Math.hypot(dx, dz) < 0.05) {
