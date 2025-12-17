@@ -268,6 +268,10 @@ function createEngine(xOffset) {
 const [leftEngine, rightEngine] = [createEngine(-0.6), createEngine(0.6)];
 fuselage.add(leftEngine, rightEngine);
 
+// ---------------- Bounding Boxes para Colisões ----------------
+const shipBoundingBox = new THREE.Box3();
+const planetBoundingBox = new THREE.Box3();
+
 const phys = { velocity: new THREE.Vector3(0, 0, 0), acceleration: 0, yawVel: 0, maxSpeed: 20, thrust: 30, angularSpeed: Math.PI * 2.5, damping: 0.96, angularDamping: 0.8, boostMultiplier: 2.6, boosting: false, boostAmount: 1.0, boostRechargeRate: 0.1 };
 const input = { forward: false, back: false, left: false, right: false, boost: false };
 
@@ -313,22 +317,34 @@ function animate() {
     // Planet self-rotation
     p.mesh.rotation.y += p.rotationSpeed * dt;
 
-    // Detecção de colisão com a nave
+    // Obter posição mundial do planeta
     const planetWorldPos = new THREE.Vector3();
     p.mesh.getWorldPosition(planetWorldPos);
-    const distance = shipRoot.position.distanceTo(planetWorldPos);
-    const collisionDist = 2.0 + p.size;
+    
+    // Criar BoundingBox do planeta nas coordenadas mundiais
+    // Tamanho maior para garantir colisão (tamanho visual + margem)
+    const planetSize = p.size * 4 + 1.5;
+    planetBoundingBox.setFromCenterAndSize(
+      planetWorldPos,
+      new THREE.Vector3(planetSize, planetSize, planetSize)
+    );
+    
+    // Atualizar BoundingBox da nave (coordenadas mundiais)
+    shipBoundingBox.setFromObject(shipRoot);
 
-    if (distance < collisionDist && p.inOrbit) {
+    // Detecção de colisão usando BoundingBox
+    if (shipBoundingBox.intersectsBox(planetBoundingBox) && p.inOrbit) {
       // Colisão = Planeta sai da órbita
       p.inOrbit = false;
-
+      
       const impactDir = new THREE.Vector3()
         .subVectors(planetWorldPos, shipRoot.position)
         .normalize();
 
       const shipSpeed = phys.velocity.length();
       p.velocity.copy(impactDir).multiplyScalar(shipSpeed * 0.5 + 3);
+      
+      console.log("Colisão detetada com planeta!");
     }
   }
 
