@@ -336,20 +336,24 @@ function updateHandControl() {
     return;
   }
   
-  // Map hand position to lever range (clamped values)
-  // Inverter X: mão esquerda = manete esquerda
-  // Inverter Y: mão cima = manete cima (para trás)
-  const leverX = 1.2 - hand.x * 2.1;  // Range: 1.2 to -0.9 (invertido)
-  const leverZ = -0.5 + hand.y * 1.0;  // Range: -0.5 to 0.5 (invertido)
-  
+  // Ajuste de range para cobrir toda a área da manete mesmo sem ir até a borda da câmera
+  // Calibração: supondo que hand.x vai de 0.15 a 0.85 e hand.y de 0.15 a 0.85 na prática
+  const minX = 0.15, maxX = 0.85;
+  const minY = 0.15, maxY = 0.85;
+  const normX = Math.max(0, Math.min(1, (hand.x - minX) / (maxX - minX)));
+  const normY = Math.max(0, Math.min(1, (hand.y - minY) / (maxY - minY)));
+  // Amplie o range multiplicador para facilitar alcançar as extremidades
+  const leverX = 1.2 - normX * 2.1;  // Range: 1.2 a -0.9
+  const leverZ = -0.5 + normY * 1.0; // Range: -0.5 a 0.5
+
   console.log('Lever target:', leverX, leverZ);
-  
+
   if (!animating && !isNaN(leverX) && !isNaN(leverZ)) {
-    // Smooth movement
+    // Movimento suave
     targetPos.x += (leverX - targetPos.x) * 0.15;
     targetPos.z += (leverZ - targetPos.z) * 0.15;
-    
-    // Clamp to valid gear area
+
+    // Limitar à área válida
     targetPos.x = Math.max(-0.9, Math.min(1.2, targetPos.x));
     targetPos.z = Math.max(-0.5, Math.min(0.5, targetPos.z));
   }
