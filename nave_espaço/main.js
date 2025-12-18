@@ -436,7 +436,7 @@ function animate() {
   const accelVec = forwardDir.multiplyScalar(thrust * dt);
   phys.velocity.add(accelVec);
 
-  // yaw control
+  // yaw control movimento de rotação de um objeto (como um carro, avião ou barco) em torno do seu eixo vertical 
   let yawInput = 0;
   if (input.left) yawInput += 1;
   if (input.right) yawInput -= 1;
