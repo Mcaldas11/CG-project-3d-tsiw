@@ -1,10 +1,11 @@
 # Computação Gráfica - Project 3d
 
+Projeto com utilização da biblioteca three.js
+
 - [Three.js tutorial](https://www.youtube.com/watch?v=Q7AOvWpIVHU)
 - [Three.js example](https://www.youtube.com/watch?v=8jP4xpga6yY)
 
 
-# CG-project-3d-tsiw
 Projeto com utilização da biblioteca three.js
 
 
