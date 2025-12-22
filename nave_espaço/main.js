@@ -318,10 +318,37 @@ fuselage.add(leftEngine, rightEngine);
 const shipBoundingBox = new THREE.Box3();
 const planetBoundingBox = new THREE.Box3();
 
-const phys = { velocity: new THREE.Vector3(0, 0, 0), acceleration: 0, yawVel: 0, maxSpeed: 20, thrust: 30, angularSpeed: Math.PI * 2.5, damping: 0.96, angularDamping: 0.8, boostMultiplier: 2.6, boosting: false, boostAmount: 1.0, boostRechargeRate: 0.1 };
-const input = { forward: false, back: false, left: false, right: false, boost: false };
 
-const keys = { KeyW: 'forward', KeyS: 'back', KeyA: 'left', KeyD: 'right', ShiftLeft: 'boost', ShiftRight: 'boost' };
+// Add vertical velocity and input for flight
+const phys = {
+  velocity: new THREE.Vector3(0, 0, 0),
+  verticalVel: 0,
+  acceleration: 0,
+  yawVel: 0,
+  maxSpeed: 20,
+  thrust: 30,
+  verticalThrust: 16,
+  angularSpeed: Math.PI * 2.5,
+  damping: 0.96,
+  angularDamping: 0.8,
+  verticalDamping: 0.93,
+  boostMultiplier: 2.6,
+  boosting: false,
+  boostAmount: 1.0,
+  boostRechargeRate: 0.1
+};
+const input = { forward: false, back: false, left: false, right: false, boost: false, up: false, down: false };
+
+const keys = {
+  KeyW: 'forward',
+  KeyS: 'back',
+  KeyA: 'left',
+  KeyD: 'right',
+  ShiftLeft: 'boost',
+  ShiftRight: 'boost',
+  ArrowUp: 'up',
+  ArrowDown: 'down'
+};
 window.addEventListener("keydown", (e) => { if (keys[e.code]) input[keys[e.code]] = true; });
 window.addEventListener("keyup", (e) => { if (keys[e.code]) input[keys[e.code]] = false; });
 
@@ -461,20 +488,28 @@ function animate() {
     );
   }
 
-  // update position
+
+  // vertical flight input
+  let verticalInput = 0;
+  if (input.up) verticalInput += 1;
+  if (input.down) verticalInput -= 1;
+  phys.verticalVel += verticalInput * phys.verticalThrust * dt;
+  // apply vertical damping
+  phys.verticalVel *= Math.pow(phys.verticalDamping, dt * 60);
+
+  // update position (horizontal)
   shipRoot.position.addScaledVector(phys.velocity, dt);
+  // update position (vertical)
+  shipRoot.position.y += phys.verticalVel * dt;
+  // clamp y to a reasonable range (e.g., 0.2 to 10)
+  shipRoot.position.y = Math.max(0.2, Math.min(10, shipRoot.position.y));
 
-  // keep y fixed
-  shipRoot.position.y = 0.6;
-
-  // tilt wings based on yawVel to give visual banking
+  // tilt wings based on yawVel and verticalVel for visual banking and pitch
   const bank = THREE.MathUtils.clamp(phys.yawVel * 0.25, -0.45, 0.45);
+  const pitch = THREE.MathUtils.clamp(phys.verticalVel * 0.04, -0.25, 0.25);
   leftWing.rotation.z = THREE.MathUtils.lerp(leftWing.rotation.z, bank, 0.08);
-  rightWing.rotation.z = THREE.MathUtils.lerp(
-    rightWing.rotation.z,
-    -bank,
-    0.08
-  );
+  rightWing.rotation.z = THREE.MathUtils.lerp(rightWing.rotation.z, -bank, 0.08);
+  fuselage.rotation.x = THREE.MathUtils.lerp(fuselage.rotation.x, pitch, 0.08);
 
   // camera follow
   updateCamera(dt);
