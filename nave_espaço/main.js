@@ -190,7 +190,7 @@ for (let idx = 0; idx < specs.length; idx++) {
 
   if (s.hasRings) {
     const ringHolder = new THREE.Group();
-    ringHolder.position.copy(mesh.position);
+    ringHolder.position.set(0, 0, 0); // Relativo ao planeta
     ringHolder.rotation.x = Math.PI * 0.3 + (Math.random() * 0.2 - 0.1);
     const [segs, inner, outer] = [48, s.size * 3.6, s.size * 5.6];
     for (let layer = 0; layer < 2; layer++) {
@@ -205,7 +205,7 @@ for (let idx = 0; idx < specs.length; idx++) {
         ringHolder.add(cube);
       }
     }
-    pivot.add(ringHolder);
+    mesh.add(ringHolder); // Agrupa os anéis ao planeta
   }
 
   const orbitPoints = [];
