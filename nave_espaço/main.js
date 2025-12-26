@@ -1,5 +1,21 @@
+
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+// --- Texture Loader ---
+const textureLoader = new THREE.TextureLoader();
+
+// Map planet index to texture file
+const planetTextures = [
+  "images/mercurio.png", // Mercúrio
+  "images/venus.png",   // Vénus
+  "images/terra.png",   // Terra
+  "images/marte.png",   // Marte
+  "images/saturno.png", // Saturno
+  "images/jupiter.png", // Júpiter
+  "images/urano.png",   // Urano
+  "images/netuno.png",  // Neptuno
+];
 
 // ---------------- Scene / Camera / Renderer ----------------
 const scene = new THREE.Scene();
@@ -47,9 +63,16 @@ scene.add(solar);
 // Sun - blocky style
 const sun = new THREE.Group();
 sun.position.set(0, 2.0, 0);
+// Adiciona textura ao Sol
+const sunTexture = textureLoader.load("images/sol.png");
 sun.add(new THREE.Mesh(
   new THREE.BoxGeometry(2.5, 2.5, 2.5),
-  new THREE.MeshStandardMaterial({ emissive: 0xffdd66, emissiveIntensity: 2.0, color: 0xffdd66 })
+  new THREE.MeshStandardMaterial({
+    map: sunTexture,
+    emissive: 0xffdd66,
+    emissiveIntensity: 2.0,
+    color: 0xffdd66
+  })
 ));
 for (let i = 0; i < 8; i++) {
   const angle = (i / 8) * Math.PI * 2;
@@ -81,60 +104,73 @@ const specs = [
 ];
 
 // Function to create blocky planet
-function createBlockyPlanet(spec) {
+function createBlockyPlanet(spec, textureIndex = null, withExtras = false) {
   const planetGroup = new THREE.Group();
 
   // Main planet core (cube)
   const coreSize = spec.size * 2;
-  const core = new THREE.Mesh(
-    new THREE.BoxGeometry(coreSize, coreSize, coreSize),
-    new THREE.MeshStandardMaterial({
+  let material;
+  if (textureIndex !== null && planetTextures[textureIndex]) {
+    const tex = textureLoader.load(planetTextures[textureIndex]);
+    material = new THREE.MeshStandardMaterial({
+      map: tex,
+      metalness: 0.1,
+      roughness: 0.8,
+    });
+  } else {
+    material = new THREE.MeshStandardMaterial({
       color: spec.color,
       metalness: 0.1,
       roughness: 0.8,
-    })
+    });
+  }
+  const core = new THREE.Mesh(
+    new THREE.BoxGeometry(coreSize, coreSize, coreSize),
+    material
   );
   core.castShadow = true;
   core.receiveShadow = true;
   planetGroup.add(core);
 
-  // Add random cubic details to planets
-  const nDetails = 3 + Math.floor(Math.random() * 4);
-  for (let i = 0; i < nDetails; i++) {
-    const detail = new THREE.Mesh(
-      new THREE.BoxGeometry(
-        coreSize * (0.2 + Math.random() * 0.3),
-        coreSize * (0.2 + Math.random() * 0.3),
-        coreSize * (0.2 + Math.random() * 0.3)
-      ),
-      new THREE.MeshStandardMaterial({
-        color: new THREE.Color(spec.color).offsetHSL(
-          0,
-          0,
-          -0.1 + Math.random() * 0.2
+  // Só adicionar extras se for planeta com anéis
+  if (withExtras) {
+    const nDetails = 3 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < nDetails; i++) {
+      const detail = new THREE.Mesh(
+        new THREE.BoxGeometry(
+          coreSize * (0.2 + Math.random() * 0.3),
+          coreSize * (0.2 + Math.random() * 0.3),
+          coreSize * (0.2 + Math.random() * 0.3)
         ),
-        metalness: 0.2,
-        roughness: 0.7,
-      })
-    );
+        new THREE.MeshStandardMaterial({
+          color: new THREE.Color(spec.color).offsetHSL(
+            0,
+            0,
+            -0.1 + Math.random() * 0.2
+          ),
+          metalness: 0.2,
+          roughness: 0.7,
+        })
+      );
 
-    // Random position on planet surface
-    const angle1 = Math.random() * Math.PI * 2;
-    const angle2 = Math.random() * Math.PI * 2;
-    const dist = coreSize * 0.5;
-    detail.position.set(
-      Math.cos(angle1) * Math.cos(angle2) * dist,
-      Math.sin(angle2) * dist,
-      Math.sin(angle1) * Math.cos(angle2) * dist
-    );
-    detail.rotation.set(
-      Math.random() * Math.PI,
-      Math.random() * Math.PI,
-      Math.random() * Math.PI
-    );
-    detail.castShadow = true;
-    detail.receiveShadow = true;
-    planetGroup.add(detail);
+      // Random position on planet surface
+      const angle1 = Math.random() * Math.PI * 2;
+      const angle2 = Math.random() * Math.PI * 2;
+      const dist = coreSize * 0.5;
+      detail.position.set(
+        Math.cos(angle1) * Math.cos(angle2) * dist,
+        Math.sin(angle2) * dist,
+        Math.sin(angle1) * Math.cos(angle2) * dist
+      );
+      detail.rotation.set(
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI
+      );
+      detail.castShadow = true;
+      detail.receiveShadow = true;
+      planetGroup.add(detail);
+    }
   }
 
   return planetGroup;
@@ -142,12 +178,13 @@ function createBlockyPlanet(spec) {
 
 const planets = [];
 
-for (const s of specs) {
+for (let idx = 0; idx < specs.length; idx++) {
+  const s = specs[idx];
   const pivot = new THREE.Group();
   pivot.position.copy(sun.position);
 
   // Planet mesh - blocky version
-  const mesh = createBlockyPlanet(s);
+  const mesh = createBlockyPlanet(s, idx, !!s.hasRings);
   mesh.position.set(s.r, 0.5, 0);
   pivot.add(mesh);
 
