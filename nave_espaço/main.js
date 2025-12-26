@@ -64,16 +64,16 @@ scene.add(solar);
 const sun = new THREE.Group();
 sun.position.set(0, 2.0, 0);
 // Adiciona textura ao Sol
-const sunTexture = textureLoader.load("images/sol.png");
-sun.add(new THREE.Mesh(
-  new THREE.BoxGeometry(2.5, 2.5, 2.5),
-  new THREE.MeshStandardMaterial({
-    map: sunTexture,
-    emissive: 0xffdd66,
-    emissiveIntensity: 2.0,
-    color: 0xffdd66
-  })
-));
+textureLoader.load("images/sol.png", function(sunTexture) {
+  sun.add(new THREE.Mesh(
+    new THREE.BoxGeometry(2.5, 2.5, 2.5),
+    new THREE.MeshStandardMaterial({
+      map: sunTexture,
+      metalness: 0.2,
+      roughness: 0.7
+    })
+  ));
+});
 for (let i = 0; i < 8; i++) {
   const angle = (i / 8) * Math.PI * 2;
   const flare = new THREE.Mesh(
