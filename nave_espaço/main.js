@@ -232,10 +232,29 @@ for (let idx = 0; idx < specs.length; idx++) {
 }
 
 // ---------------- Ship - Improved Blocky Design ----------------
+
 const shipRoot = new THREE.Group();
 shipRoot.position.set(0, 0, 0);
 shipRoot.rotation.y = Math.PI; // Rotaciona a nave para ficar de costas para a câmara
 scene.add(shipRoot);
+
+// --- GSAP Ship Animation Example ---
+// Animate ship entrance on load
+if (window.gsap) {
+  shipRoot.position.set(0, 10, 0); // Start above scene
+  gsap.to(shipRoot.position, {
+    y: 0,
+    duration: 2,
+    ease: "bounce.out"
+  });
+  gsap.fromTo(shipRoot.rotation, {
+    y: Math.PI + 0.5
+  }, {
+    y: Math.PI,
+    duration: 2,
+    ease: "power2.out"
+  });
+}
 
 const shipColors = {
   primary: 0xf25346,
@@ -538,8 +557,8 @@ function animate() {
   shipRoot.position.addScaledVector(phys.velocity, dt);
   // update position (vertical)
   shipRoot.position.y += phys.verticalVel * dt;
-  // clamp y to a reasonable range (e.g., 0.2 to 10)
-  shipRoot.position.y = Math.max(0.2, Math.min(10, shipRoot.position.y));
+  // clamp only lower bound so ship cannot go below ground
+  shipRoot.position.y = Math.max(0.2, shipRoot.position.y);
 
   // tilt wings based on yawVel and verticalVel for visual banking and pitch
   const bank = THREE.MathUtils.clamp(phys.yawVel * 0.25, -0.45, 0.45);
