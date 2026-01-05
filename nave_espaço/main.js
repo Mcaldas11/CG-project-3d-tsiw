@@ -76,20 +76,6 @@ textureLoader.load("images/sol.png", function (sunTexture) {
   sunSphere.receiveShadow = true;
   sun.add(sunSphere);
 });
-for (let i = 0; i < 8; i++) {
-  const angle = (i / 8) * Math.PI * 2;
-  const flare = new THREE.Mesh(
-    new THREE.BoxGeometry(0.4, 0.4, 1.2),
-    new THREE.MeshStandardMaterial({
-      emissive: 0xff9944,
-      emissiveIntensity: 1.5,
-      color: 0xff9944,
-    })
-  );
-  flare.position.set(Math.cos(angle) * 1.8, 0, Math.sin(angle) * 1.8);
-  flare.rotation.y = angle;
-  sun.add(flare);
-}
 solar.add(sun);
 
 // Sun glow
@@ -99,12 +85,12 @@ scene.add(sunLight);
 
 // Planet specs
 const specs = [
-  { r: 3, size: 0.2, speed: 0.5, color: 0x8b7355 },
-  { r: 5, size: 0.25, speed: 0.4, color: 0xffd700 },
-  { r: 7.5, size: 0.3, speed: 0.3, color: 0x4169e1 },
-  { r: 10, size: 0.22, speed: 0.25, color: 0xff6347 },
+  { r: 6, size: 0.2, speed: 0.5, color: 0x8b7355 },
+  { r: 10, size: 0.25, speed: 0.4, color: 0xffd700 },
+  { r: 15, size: 0.3, speed: 0.3, color: 0x4169e1 },
+  { r: 20, size: 0.22, speed: 0.25, color: 0xff6347 },
   {
-    r: 14,
+    r: 28,
     size: 0.5,
     speed: 0.18,
     color: 0xdaa520,
@@ -112,15 +98,15 @@ const specs = [
     ringColor: 0xb8a570,
   },
   {
-    r: 17.5,
+    r: 35,
     size: 0.4,
     speed: 0.14,
     color: 0xf4a460,
     hasRings: true,
     ringColor: 0xd4a574,
   },
-  { r: 21, size: 0.28, speed: 0.1, color: 0x4fd0e7 },
-  { r: 24.5, size: 0.27, speed: 0.08, color: 0x2f4f7f },
+  { r: 42, size: 0.28, speed: 0.1, color: 0x4fd0e7 },
+  { r: 49, size: 0.27, speed: 0.08, color: 0x2f4f7f },
 ];
 
 function createBlockyPlanet(spec, textureIndex = null, withExtras = false) {
@@ -582,9 +568,18 @@ function animate() {
     }
   }
 
-  // engine visual - rotate propellers
-  leftEngine.propeller.rotation.z += 25 * dt;
-  rightEngine.propeller.rotation.z += 25 * dt;
+  // engine visual - propeller speed depende da velocidade da nave
+  const shipSpeed = phys.velocity.length();
+  let propellerSpeed = 0;
+  if (shipSpeed > 0.1) {
+    // roda mais rápido quanto maior a velocidade
+    propellerSpeed = THREE.MathUtils.clamp(shipSpeed * 1.2, 5, 25);
+  } else if (shipSpeed > 0.01) {
+    // roda devagar ao desacelerar
+    propellerSpeed = 5;
+  } // se shipSpeed ~0, não roda
+  leftEngine.propeller.rotation.z += propellerSpeed * dt;
+  rightEngine.propeller.rotation.z += propellerSpeed * dt;
 
   // Sun rotation
   sun.rotation.y += 0.05 * dt;
