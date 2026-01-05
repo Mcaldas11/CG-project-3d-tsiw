@@ -137,7 +137,6 @@ function createBlockyPlanet(spec, textureIndex = null, withExtras = false) {
   core.receiveShadow = true;
   planetGroup.add(core);
 
-  // Não adicionar detalhes extras, apenas esfera simples
 
   return planetGroup;
 }
