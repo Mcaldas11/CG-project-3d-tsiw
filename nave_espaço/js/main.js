@@ -16,26 +16,13 @@ const planetTextures = [
   "images/netuno.png", // Neptuno
 ];
 
-// fundo com uma gradiação de um preto para cinzento
-const canvas = document.createElement("canvas");
-canvas.width = 256;
-canvas.height = 256;
-const ctx = canvas.getContext("2d");
-
-const gradient = ctx.createLinearGradient(0, 0, 0, 256);
-gradient.addColorStop(0, "#0a0a12");
-gradient.addColorStop(0.5, "#15151f");
-gradient.addColorStop(1, "#1a1a2e");
-
-ctx.fillStyle = gradient;
-ctx.fillRect(0, 0, 256, 256);
-
-const texture = new THREE.CanvasTexture(canvas);
-texture.colorSpace = THREE.SRGBColorSpace;
+// textura ambiente
+const backgroundTexture = textureLoader.load("images/Gemini_Generated_Image_9l4ui09l4ui09l4u.png");
+backgroundTexture.colorSpace = THREE.SRGBColorSpace;
 
 // ---------------- Scene / Camera / Renderer ----------------
 const scene = new THREE.Scene();
-scene.background = texture;
+scene.background = backgroundTexture;
 
 const camera = new THREE.PerspectiveCamera(
   60,
