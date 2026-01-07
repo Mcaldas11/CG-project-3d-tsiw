@@ -229,7 +229,7 @@ for (let idx = 0; idx < specs.length; idx++) {
 // ---------------- Ship - Improved Blocky Design ----------------
 
 const shipRoot = new THREE.Group();
-shipRoot.position.set(0, 0, 0);
+shipRoot.position.set(0, 0, -30);
 shipRoot.rotation.y = Math.PI; // Rotaciona a nave para ficar de costas para a câmara
 scene.add(shipRoot);
 
@@ -564,7 +564,7 @@ function animate() {
       p.velocity.copy(impactDir).multiplyScalar(shipSpeed * 0.5 + 3);
 
       console.log("Colisão detetada com planeta!");
-    }
+    } 
   }
 
   // engine visual - propeller speed depende da velocidade da nave
