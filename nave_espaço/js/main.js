@@ -16,9 +16,26 @@ const planetTextures = [
   "images/netuno.png", // Neptuno
 ];
 
+// fundo com uma gradiação de um preto para cinzento
+const canvas = document.createElement("canvas");
+canvas.width = 256;
+canvas.height = 256;
+const ctx = canvas.getContext("2d");
+
+const gradient = ctx.createLinearGradient(0, 0, 0, 256);
+gradient.addColorStop(0, "#0a0a12");
+gradient.addColorStop(0.5, "#15151f");
+gradient.addColorStop(1, "#1a1a2e");
+
+ctx.fillStyle = gradient;
+ctx.fillRect(0, 0, 256, 256);
+
+const texture = new THREE.CanvasTexture(canvas);
+texture.colorSpace = THREE.SRGBColorSpace;
+
 // ---------------- Scene / Camera / Renderer ----------------
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0b0b12);
+scene.background = texture;
 
 const camera = new THREE.PerspectiveCamera(
   60,
@@ -37,9 +54,9 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enabled = false; // disable manual orbit
 
 // ---------------- Lights ----------------
-const ambient = new THREE.AmbientLight(0xffffff, 0.25);
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambient);
-const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+const dir = new THREE.DirectionalLight(0xffffff, 1.2);
 dir.position.set(8, 20, 8);
 dir.castShadow = true;
 scene.add(dir);
@@ -674,6 +691,34 @@ function animate() {
   if (boostBarFill) {
     boostBarFill.style.width = boostPercentage + "%";
   }
+
+  // Update Minimap 2D
+  if (window.minimapAPI) {
+    const planetsData = planets.map((p) => {
+      const worldPos = new THREE.Vector3();
+      p.mesh.getWorldPosition(worldPos);
+      return {
+        position: { x: worldPos.x, z: worldPos.z },
+        radius: p.radius,
+        size: p.size,
+        inOrbit: p.inOrbit,
+      };
+    });
+
+    const shipData = {
+      x: shipRoot.position.x,
+      z: shipRoot.position.z,
+      rotation: shipRoot.rotation.y,
+    };
+
+    const sunData = {
+      x: sun.position.x,
+      z: sun.position.z,
+    };
+
+    window.minimapAPI.draw(planetsData, shipData, sunData);
+  }
+
   renderer.render(scene, camera);
 }
 animate();
