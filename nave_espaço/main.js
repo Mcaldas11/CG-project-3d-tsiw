@@ -668,17 +668,14 @@ function animate() {
     0.08
   );
   fuselage.rotation.x = THREE.MathUtils.lerp(fuselage.rotation.x, pitch, 0.08);
-
   // camera follow
   updateCamera(dt);
-
   // Update boost bar
   const boostPercentage = phys.boostAmount * 100;
   const boostBarFill = document.getElementById("boostBarFill");
   if (boostBarFill) {
     boostBarFill.style.width = boostPercentage + "%";
   }
-
   renderer.render(scene, camera);
 }
 animate();
