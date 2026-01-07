@@ -144,34 +144,29 @@ for (let idx = 0; idx < specs.length; idx++) {
   if (s.hasRings) {
     const ringHolder = new THREE.Group();
     ringHolder.position.set(0, 0, 0); // Relativo ao planeta
-    ringHolder.rotation.x = Math.PI * 0.3 + (Math.random() * 0.2 - 0.1);
-    const [segs, inner, outer] = [48, s.size * 3.6, s.size * 5.6];
-    for (let layer = 0; layer < 2; layer++) {
-      for (let i = 0; i < segs; i++) {
-        const angle = (i / segs) * Math.PI * 2;
-        const radius =
-          inner +
-          (outer - inner) * (layer / 2) +
-          (Math.random() * (outer - inner)) / 2;
-        const size = 0.08 + Math.random() * 0.12;
-        const cube = new THREE.Mesh(
-          new THREE.BoxGeometry(size, size * 0.3, size),
-          new THREE.MeshStandardMaterial({
-            color: s.ringColor,
-            metalness: 0.2,
-            roughness: 0.6,
-          })
-        );
-        cube.position.set(
-          Math.cos(angle) * radius,
-          0,
-          Math.sin(angle) * radius
-        );
-        cube.rotation.y = angle;
-        cube.castShadow = cube.receiveShadow = true;
-        ringHolder.add(cube);
-      }
+    ringHolder.rotation.x = Math.PI * 0.4; // Inclinação do anel
+
+    // Criar múltiplos anéis torus
+    const numRings = 3; // Número de anéis
+    for (let i = 0; i < numRings; i++) {
+      const ringRadius = s.size * 3.5 + i * s.size * 0.8; // Raio crescente
+      const tubeRadius = 0.05 + i * 0.02; // Espessura do tubo
+
+      const torus = new THREE.Mesh(
+        new THREE.TorusGeometry(ringRadius, tubeRadius, 16, 64),
+        new THREE.MeshStandardMaterial({
+          color: s.ringColor,
+          metalness: 0.3,
+          roughness: 0.5,
+          transparent: true,
+          opacity: 0.9 - i * 0.15, // Anéis exteriores mais transparentes
+        })
+      );
+      torus.castShadow = true;
+      torus.receiveShadow = true;
+      ringHolder.add(torus);
     }
+
     mesh.add(ringHolder); // Agrupa os anéis ao planeta
   }
 
