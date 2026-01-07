@@ -34,7 +34,7 @@ renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enabled = false; // disable manual orbit 
+controls.enabled = false; // disable manual orbit
 
 // ---------------- Lights ----------------
 const ambient = new THREE.AmbientLight(0xffffff, 0.25);
@@ -58,7 +58,6 @@ scene.add(new THREE.GridHelper(80, 80, 0x333344, 0x222233));
 const solar = new THREE.Group();
 solar.position.set(0, 0.01, 0);
 scene.add(solar);
-
 
 // Sol (aumentado)
 const sun = new THREE.Group();
@@ -136,7 +135,6 @@ function createBlockyPlanet(spec, textureIndex = null, withExtras = false) {
   core.castShadow = true;
   core.receiveShadow = true;
   planetGroup.add(core);
-
 
   return planetGroup;
 }
@@ -552,19 +550,37 @@ function animate() {
     shipBoundingBox.setFromObject(shipRoot);
 
     // Detecção de colisão usando BoundingBox
-    if (shipBoundingBox.intersectsBox(planetBoundingBox) && p.inOrbit) {
-      // Colisão = Planeta sai da órbita
-      p.inOrbit = false;
 
-      const impactDir = new THREE.Vector3()
-        .subVectors(planetWorldPos, shipRoot.position)
-        .normalize();
+    if (shipBoundingBox.intersectsBox(planetBoundingBox)) {
+      if (p.inOrbit) {
+        // Primeira colisão - Planeta sai da órbita
+        p.inOrbit = false;
 
-      const shipSpeed = phys.velocity.length();
-      p.velocity.copy(impactDir).multiplyScalar(shipSpeed * 0.5 + 3);
+        const impactDir = new THREE.Vector3()
+          .subVectors(planetWorldPos, shipRoot.position)
+          .normalize();
 
-      console.log("Colisão detetada com planeta!");
-    } 
+        const shipSpeed = phys.velocity.length();
+        p.velocity.copy(impactDir).multiplyScalar(shipSpeed * 0.5 + 3);
+
+        console.log("Colisão detetada com planeta em órbita!");
+      } else {
+        // Colisão com planeta já fora de órbita
+        const impactDir = new THREE.Vector3()
+          .subVectors(planetWorldPos, shipRoot.position)
+          .normalize();
+
+        const shipSpeed = phys.velocity.length();
+
+        // Empurra o planeta na direção do impacto
+        p.velocity.add(impactDir.clone().multiplyScalar(shipSpeed * 0.3 + 2));
+
+        // Opcional: Empurra a nave para trás (recuo)
+        phys.velocity.add(impactDir.clone().multiplyScalar(-shipSpeed * 0.2));
+
+        console.log("Colisão detetada com planeta fora de órbita!");
+      }
+    }
   }
 
   // engine visual - propeller speed depende da velocidade da nave
