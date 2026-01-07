@@ -44,16 +44,6 @@ dir.position.set(8, 20, 8);
 dir.castShadow = true;
 scene.add(dir);
 
-// ---------------- Floor ----------------
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(80, 80),
-  new THREE.MeshStandardMaterial({ color: 0x161622 })
-);
-floor.rotation.x = -Math.PI / 2;
-floor.receiveShadow = true;
-scene.add(floor);
-scene.add(new THREE.GridHelper(80, 80, 0x333344, 0x222233));
-
 // ---------------- Solar System ----------------
 const solar = new THREE.Group();
 solar.position.set(0, 0.01, 0);
@@ -575,8 +565,7 @@ function animate() {
         // Empurra o planeta na direção do impacto
         p.velocity.add(impactDir.clone().multiplyScalar(shipSpeed * 0.3 + 2));
 
-        // Opcional: Empurra a nave para trás (recuo)
-        phys.velocity.add(impactDir.clone().multiplyScalar(-shipSpeed * 0.2));
+        
 
         console.log("Colisão detetada com planeta fora de órbita!");
       }
@@ -671,9 +660,7 @@ function animate() {
   shipRoot.position.addScaledVector(phys.velocity, dt);
   // update position (vertical)
   shipRoot.position.y += phys.verticalVel * dt;
-  // clamp only lower bound so ship cannot go below ground
-  shipRoot.position.y = Math.max(0.2, shipRoot.position.y);
-
+  
   // tilt wings based on yawVel and verticalVel for visual banking and pitch
   const bank = THREE.MathUtils.clamp(phys.yawVel * 0.25, -0.45, 0.45);
   const pitch = THREE.MathUtils.clamp(phys.verticalVel * 0.04, -0.25, 0.25);
