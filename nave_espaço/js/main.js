@@ -17,8 +17,11 @@ const planetTextures = [
 ];
 
 // textura ambiente
-const backgroundTexture = textureLoader.load("images/Gemini_Generated_Image_9l4ui09l4ui09l4u.png");
+const backgroundTexture = textureLoader.load("images/espaço.png");
 backgroundTexture.colorSpace = THREE.SRGBColorSpace;
+backgroundTexture.wrapS = THREE.RepeatWrapping;
+backgroundTexture.wrapT = THREE.RepeatWrapping;
+backgroundTexture.repeat.set(6, 4);
 
 // ---------------- Scene / Camera / Renderer ----------------
 const scene = new THREE.Scene();
