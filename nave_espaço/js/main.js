@@ -528,8 +528,8 @@ function animate() {
       );
       if (pushDir.lengthSq() < 1e-6) pushDir.set(0, 1, 0);
       pushDir.normalize();
-      shipRoot.position.addScaledVector(pushDir, 0.25);
-      phys.velocity.addScaledVector(pushDir, 10 * dt);
+      phys.velocity.copy(pushDir).multiplyScalar(60);
+      console.log("Colisão detetada com o Sol!");
     }
   }
 
