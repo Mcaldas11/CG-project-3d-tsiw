@@ -56,8 +56,10 @@ const solar = new THREE.Group();
 solar.position.set(0, 0.01, 0);
 scene.add(solar);
 
-// Sol (aumentado)
+// Sol 
 const sun = new THREE.Group();
+const sunBoundingBox = new THREE.Box3();
+let sunMesh = null;
 sun.position.set(0, 2.0, 0);
 textureLoader.load("images/sol.png", function (sunTexture) {
   const sunSphere = new THREE.Mesh(
@@ -70,7 +72,9 @@ textureLoader.load("images/sol.png", function (sunTexture) {
   );
   sunSphere.castShadow = true;
   sunSphere.receiveShadow = true;
+  sunMesh = sunSphere;
   sun.add(sunSphere);
+  sunBoundingBox.setFromObject(sun);
 });
 solar.add(sun);
 
@@ -153,7 +157,7 @@ for (let idx = 0; idx < specs.length; idx++) {
     ringHolder.position.set(0, 0, 0); // Relativo ao planeta
     ringHolder.rotation.x = Math.PI * 0.4; // Inclinação do anel
 
-    // Criar múltiplos anéis torus
+    // aneis torus
     const numRings = 3; // Número de anéis
     for (let i = 0; i < numRings; i++) {
       const ringRadius = s.size * 3.5 + i * s.size * 0.8; // Raio crescente
@@ -513,6 +517,22 @@ function animate() {
   const dt = Math.min(0.05, clock.getDelta());
   const t = clock.getElapsedTime();
 
+  // Atualiza bounding boxes principais e verifica colisão com o sol
+  shipBoundingBox.setFromObject(shipRoot);
+  if (sunMesh) {
+    sunBoundingBox.setFromObject(sun);
+    if (shipBoundingBox.intersectsBox(sunBoundingBox)) {
+      const pushDir = new THREE.Vector3().subVectors(
+        shipRoot.position,
+        sun.position
+      );
+      if (pushDir.lengthSq() < 1e-6) pushDir.set(0, 1, 0);
+      pushDir.normalize();
+      shipRoot.position.addScaledVector(pushDir, 0.25);
+      phys.velocity.addScaledVector(pushDir, 10 * dt);
+    }
+  }
+
   // planets
   for (const p of planets) {
     if (p.inOrbit) {
@@ -531,15 +551,11 @@ function animate() {
     p.mesh.getWorldPosition(planetWorldPos);
 
     // Criar BoundingBox do planeta nas coordenadas mundiais
-    // Tamanho maior para garantir colisão (tamanho visual + margem)
     const planetSize = p.size * 4 + 1.5;
     planetBoundingBox.setFromCenterAndSize(
       planetWorldPos,
       new THREE.Vector3(planetSize, planetSize, planetSize)
     );
-
-    // Atualizar BoundingBox da nave (coordenadas mundiais)
-    shipBoundingBox.setFromObject(shipRoot);
 
     // Detecção de colisão usando BoundingBox
 

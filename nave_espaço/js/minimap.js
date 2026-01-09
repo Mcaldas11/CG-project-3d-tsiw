@@ -114,7 +114,7 @@ function drawMinimap(planetsData, shipPosition, sunPosition) {
     );
 
     if (distFromCenter < center - 2) {
-      // Tamanho baseado no tamanho real do planeta
+      // Tamanho baseado no tamanho do planeta
       const planetSize = Math.max(3, planet.size * 8);
 
       ctx.fillStyle = minimapConfig.colors.planets[index] || "#ffffff";
@@ -143,23 +143,13 @@ function drawMinimap(planetsData, shipPosition, sunPosition) {
 
   ctx.fillStyle = minimapConfig.colors.ship;
   ctx.beginPath();
-  ctx.moveTo(0, 6); // Ponta (invertida)
+  ctx.moveTo(0, 6); // Ponta 
   ctx.lineTo(-4, -4); // Esquerda
   ctx.lineTo(4, -4); // Direita
   ctx.closePath();
   ctx.fill();
 
-  // Glow da nave
-  ctx.shadowColor = minimapConfig.colors.ship;
-  ctx.shadowBlur = 8;
-  ctx.fill();
-
-  ctx.restore();
-
-  // Borda do minimap (quadrado)
-  ctx.strokeStyle = minimapConfig.colors.border;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(1, 1, minimapConfig.size - 2, minimapConfig.size - 2);
+  ctx.restore();  
 }
 
 // Exportar funções para uso no main.js
