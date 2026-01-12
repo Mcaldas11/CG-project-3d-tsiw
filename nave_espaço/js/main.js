@@ -89,16 +89,7 @@ textureLoader.load("images/sol.png", function (sunTexture) {
   );
   sun.add(glowSphere);
   
-  // Segundo layer de brilho
-  const glowSphere2 = new THREE.Mesh(
-    new THREE.SphereGeometry(3.8, 32, 32),
-    new THREE.MeshBasicMaterial({
-      color: 0xffaa44,
-      transparent: true,
-      opacity: 0.15,
-      side: THREE.BackSide,
-    })
-  );
+
   sun.add(glowSphere2);
   
   sunBoundingBox.setFromObject(sun);
