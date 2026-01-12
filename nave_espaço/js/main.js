@@ -195,16 +195,16 @@ for (let idx = 0; idx < specs.length; idx++) {
     "position",
     new THREE.BufferAttribute(new Float32Array(orbitPoints), 3)
   );
-  solar.add(
-    new THREE.Line(
-      orbitGeom,
-      new THREE.LineBasicMaterial({
-        color: 0x444455,
-        transparent: true,
-        opacity: 0.3,
-      })
-    )
+  const orbitLine = new THREE.Line(
+    orbitGeom,
+    new THREE.LineBasicMaterial({
+      color: 0x444455,
+      transparent: true,
+      opacity: 0.3,
+    })
   );
+  orbitLine.visible = true;
+  solar.add(orbitLine);
 
   solar.add(pivot);
   planets.push({
@@ -217,6 +217,7 @@ for (let idx = 0; idx < specs.length; idx++) {
     velocity: new THREE.Vector3(0, 0, 0),
     inOrbit: true,
     orbitSpeed: s.speed,
+    orbitLine,
   });
 }
 
@@ -538,11 +539,44 @@ function animate() {
     if (p.inOrbit) {
       p.pivot.rotation.y += p.speed * dt;
     } else {
-      // Planeta saiu da órbita - movimento livre
+      // Planeta saiu da órbita - movimento livre + retorno suave para a órbita
       p.mesh.position.addScaledVector(p.velocity, dt);
       // Resistência do espaço
       p.velocity.multiplyScalar(0.99);
+
+      // Cálculo da correção para retornar à órbita
+      const localPos = p.mesh.position.clone();
+      const radial = new THREE.Vector3(localPos.x, 0, localPos.z);
+
+      const radialLen = radial.length();
+      if (radialLen > 1e-6) {
+        const desiredRadial = radial.clone().setLength(p.radius);
+        const radialError = desiredRadial.clone().sub(radial); // direção para o círculo de órbita
+        const returnStrength = 0.25; // ajuste lento
+        // Aplica a correção na velocidade
+        p.velocity.add(radialError.multiplyScalar(returnStrength * dt));
+
+        // Corrigir lentamente a componente Y para aproximar ao plano da órbita
+        const targetY = 0.5;
+        p.mesh.position.y = THREE.MathUtils.lerp(p.mesh.position.y, targetY, 0.2 * dt);
+
+        // Quando suficientemente perto da órbita e quase sem velocidade, voltar ao estado de órbita
+        const closeToOrbit = Math.abs(radialLen - p.radius) < 0.15;
+        const slowEnough = p.velocity.length() < 0.25;
+        if (closeToOrbit && slowEnough) {
+          // Alinhar o pivot para manter a fase/orientação atual
+          const angle = Math.atan2(localPos.z, localPos.x);
+          p.pivot.rotation.y = angle;
+          // Fixar posição local no raio exato e altura da órbita
+          p.mesh.position.set(p.radius, targetY, 0);
+          // Reset de velocidade e voltar à órbita
+          p.velocity.set(0, 0, 0);
+          p.inOrbit = true;
+        }
+      }
     }
+    // Visibilidade da linha de órbita no 3D acompanha o estado
+    if (p.orbitLine) p.orbitLine.visible = p.inOrbit;
     // Planet self-rotation
     p.mesh.rotation.y += p.rotationSpeed * dt;
 
