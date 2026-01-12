@@ -68,18 +68,45 @@ textureLoader.load("images/sol.png", function (sunTexture) {
       map: sunTexture,
       metalness: 0.2,
       roughness: 0.7,
+      emissive: 0xffdd66,
+      emissiveIntensity: 0.8,
     })
   );
   sunSphere.castShadow = true;
   sunSphere.receiveShadow = true;
   sunMesh = sunSphere;
   sun.add(sunSphere);
+  
+  // Brilho exterior do sol (glow effect)
+  const glowSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(3.2, 32, 32),
+    new THREE.MeshBasicMaterial({
+      color: 0xffdd66,
+      transparent: true,
+      opacity: 0.3,
+      side: THREE.BackSide,
+    })
+  );
+  sun.add(glowSphere);
+  
+  // Segundo layer de brilho
+  const glowSphere2 = new THREE.Mesh(
+    new THREE.SphereGeometry(3.8, 32, 32),
+    new THREE.MeshBasicMaterial({
+      color: 0xffaa44,
+      transparent: true,
+      opacity: 0.15,
+      side: THREE.BackSide,
+    })
+  );
+  sun.add(glowSphere2);
+  
   sunBoundingBox.setFromObject(sun);
 });
 solar.add(sun);
 
 // Sun glow
-const sunLight = new THREE.PointLight(0xffdd66, 2.0, 150);
+const sunLight = new THREE.PointLight(0xffdd66, 3.5, 180);
 sunLight.position.set(0, 2.0, 0);
 scene.add(sunLight);
 
