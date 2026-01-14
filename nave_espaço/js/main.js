@@ -236,6 +236,8 @@ for (let idx = 0; idx < specs.length; idx++) {
     inOrbit: true,
     orbitSpeed: s.speed,
     orbitLine,
+    orbitReturnTimer: 0,
+    orbitReturnDelay: 5.0,
   });
 }
 
@@ -557,40 +559,23 @@ function animate() {
     if (p.inOrbit) {
       p.pivot.rotation.y += p.speed * dt;
     } else {
-      // Planeta saiu da órbita - movimento livre + retorno suave para a órbita
+      // Planeta saiu da órbita - movimento livre
       p.mesh.position.addScaledVector(p.velocity, dt);
       // Resistência do espaço
       p.velocity.multiplyScalar(0.99);
 
-      // Cálculo da correção para retornar à órbita
-      const localPos = p.mesh.position.clone();
-      const radial = new THREE.Vector3(localPos.x, 0, localPos.z);
+      // Incrementar timer de retorno à órbita
+      p.orbitReturnTimer += dt;
 
-      const radialLen = radial.length();
-      if (radialLen > 1e-6) {
-        const desiredRadial = radial.clone().setLength(p.radius);
-        const radialError = desiredRadial.clone().sub(radial); // direção para o círculo de órbita
-        const returnStrength = 0.25; // ajuste lento
-        // Aplica a correção na velocidade
-        p.velocity.add(radialError.multiplyScalar(returnStrength * dt));
-
-        // Corrigir lentamente a componente Y para aproximar ao plano da órbita
-        const targetY = 0.5;
-        p.mesh.position.y = THREE.MathUtils.lerp(p.mesh.position.y, targetY, 0.2 * dt);
-
-        // Quando suficientemente perto da órbita e quase sem velocidade, voltar ao estado de órbita
-        const closeToOrbit = Math.abs(radialLen - p.radius) < 0.15;
-        const slowEnough = p.velocity.length() < 0.25;
-        if (closeToOrbit && slowEnough) {
-          // Alinhar o pivot para manter a fase/orientação atual
-          const angle = Math.atan2(localPos.z, localPos.x);
-          p.pivot.rotation.y = angle;
-          // Fixar posição local no raio exato e altura da órbita
-          p.mesh.position.set(p.radius, targetY, 0);
-          // Reset de velocidade e voltar à órbita
-          p.velocity.set(0, 0, 0);
-          p.inOrbit = true;
-        }
+      // Após 3 segundos, teleportar o planeta de volta à órbita
+      if (p.orbitReturnTimer >= p.orbitReturnDelay) {
+        p.inOrbit = true;
+        p.mesh.position.set(p.radius, 0.5, 0);
+        p.velocity.set(0, 0, 0);
+        p.orbitReturnTimer = 0;
+        // Alinhar o pivot com a posição orbital
+        p.pivot.rotation.y = Math.random() * Math.PI * 2;
+        console.log("Planeta teleportado de volta à órbita!");
       }
     }
     // Visibilidade da linha de órbita no 3D acompanha o estado
