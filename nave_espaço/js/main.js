@@ -224,21 +224,22 @@ for (let idx = 0; idx < specs.length; idx++) {
   orbitLine.visible = true;
   solar.add(orbitLine);
 
-  solar.add(pivot);
-  planets.push({
-    pivot,
-    mesh,
-    speed: s.speed,
-    radius: s.r,
-    rotationSpeed: 0.1 + Math.random() * 0.1,
-    size: s.size,
-    velocity: new THREE.Vector3(0, 0, 0),
-    inOrbit: true,
-    orbitSpeed: s.speed,
-    orbitLine,
-    orbitReturnTimer: 0,
-    orbitReturnDelay: 5.0,
-  });
+    solar.add(pivot);
+    planets.push({
+      pivot,
+      mesh,
+      speed: s.speed,
+      radius: s.r,
+      rotationSpeed: 0.1 + Math.random() * 0.1,
+      size: s.size,
+      velocity: new THREE.Vector3(0, 0, 0),
+      inOrbit: true,
+      orbitSpeed: s.speed,
+      orbitLine,
+      orbitReturnTimer: 0,
+      orbitReturnDelay: 5.0,
+      orbitAngle: 0, // Rastreia o ângulo de órbita
+    });
 }
 
 // ---------------- Ship - Improved Blocky Design ----------------
@@ -556,8 +557,11 @@ function animate() {
 
   // planets
   for (const p of planets) {
+    // Sempre atualizar o ângulo de órbita (mesmo quando fora da órbita)
+    p.orbitAngle += p.speed * dt;
+    
     if (p.inOrbit) {
-      p.pivot.rotation.y += p.speed * dt;
+      p.pivot.rotation.y = p.orbitAngle;
     } else {
       // Planeta saiu da órbita - movimento livre
       p.mesh.position.addScaledVector(p.velocity, dt);
@@ -573,9 +577,9 @@ function animate() {
         p.mesh.position.set(p.radius, 0.5, 0);
         p.velocity.set(0, 0, 0);
         p.orbitReturnTimer = 0;
-        // Alinhar o pivot com a posição orbital
-        p.pivot.rotation.y = Math.random() * Math.PI * 2;
-        console.log("Planeta teleportado de volta à órbita!");
+        // Colocar na posição correta da órbita com o ângulo correto
+        p.pivot.rotation.y = p.orbitAngle;
+        console.log("Planeta teleportado de volta à órbita na rotação correta!");
       }
     }
     // Visibilidade da linha de órbita no 3D acompanha o estado
