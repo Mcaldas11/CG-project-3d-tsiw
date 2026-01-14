@@ -89,9 +89,6 @@ textureLoader.load("images/sol.png", function (sunTexture) {
   );
   sun.add(glowSphere);
   
-
-  sun.add(glowSphere2);
-  
   sunBoundingBox.setFromObject(sun);
 });
 solar.add(sun);
